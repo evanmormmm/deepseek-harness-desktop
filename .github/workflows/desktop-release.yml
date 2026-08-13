@@ -49,7 +49,7 @@ jobs:
 
       - name: Run source and documentation gates
         run: |
-          pnpm run typecheck:contracts-ready
+          pnpm run typecheck
           pnpm run lint:contracts-ready
           pnpm run constraints
           pnpm run doc-sync
