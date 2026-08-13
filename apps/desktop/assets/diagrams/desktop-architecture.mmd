@@ -1,0 +1,14 @@
+flowchart LR
+  user["Windows user"] --> host["WinForms desktop host"]
+
+  subgraph desktop["DeepSeek Harness Desktop"]
+    host --> webview["WebView2 user interface"]
+    host --> node["Bundled private Node.js"]
+    node --> profile["Harness Web profile<br/>127.0.0.1 : random port"]
+    webview -->|"exact loopback origin"| profile
+    profile --> plugins["Sessions · tools · plugins"]
+    host -. "window close → bounded shutdown" .-> node
+  end
+
+  plugins --> state["Existing DSH_HOME data"]
+  webview -->|"external links"| shell["Windows default browser"]

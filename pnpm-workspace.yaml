@@ -7,6 +7,9 @@ packages:
   - native/landlock-run/packages/*
   # Product assemblies over the package tier; apps/cli owns the `dsh` bin.
   - apps/*
+  # Dependency-only deploy root for the Windows desktop runtime. The C# host
+  # stays at apps/desktop; this nested manifest owns the assembled Node peers.
+  - apps/desktop/runtime
   - website
   # The runnable demo leaves join as ONE workspace member: examples/package.json
   # declares the union of every leaf's cordis.yml plugins as workspace:*, so a
