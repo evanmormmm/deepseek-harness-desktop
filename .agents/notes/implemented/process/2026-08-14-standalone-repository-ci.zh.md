@@ -6,7 +6,7 @@ Status: implemented
 
 ## Problem
 
-上游工作流依赖组织级 GitHub App 凭据、Project 配置、具名企业 runner 和自托管备用池。独立公共仓库不具备这些资源，因此 Issue 自动化会立即失败，必需的拉取请求任务则会无限排队。便携 Python runtime 还会在 manylinux 容器内重新构建宿主机生成的 `node-pty` Makefile；pnpm 解析后的虚拟存储路径使该 Makefile 到 `node-addon-api` 的相对路径少一级目录。Windows 安装器冒烟测试也可能在卸载器进程退出后、Windows 释放日志文件句柄前立即开始清理。
+上游工作流依赖组织级 GitHub App 凭据、Project 配置、具名企业 runner 和自托管备用池。独立公共仓库不具备这些资源，因此 Issue 自动化会立即失败，必需的拉取请求任务则会无限排队。便携 Python runtime 还会在 manylinux 容器内重新构建宿主机生成的 `node-pty` Makefile；pnpm 完成安装后，该 Makefile 可能仍引用一个已不存在的 `node-addon-api` 生成目标片段。Windows 安装器冒烟测试也可能在卸载器进程退出后、Windows 释放日志文件句柄前立即开始清理。
 
 ## Decision
 
@@ -14,7 +14,7 @@ Status: implemented
 
 真实 API E2E 保留强制 preflight，并读取仓库 secret `DEEPSEEK_API_KEY_EXTERNAL`；secret 缺失仍然失败，不会把全部跳过误报为绿色。Dependabot 和分叉拉取请求继续不接触 secret，并在访问 secret 前跳过任务。
 
-manylinux 重建会创建宿主机生成的 Makefile 所需的相对虚拟存储目录，并把解析后的 `node-addon-api` 包复制到其中。退出 trap 会在成功或失败时删除该临时目录，然后打包流程才会继续。Windows 打包冒烟测试使用有界重试删除 fixture，以处理短暂的 `EBUSY` 及相关递归删除错误。
+manylinux 重建会在安装完成后重新运行 npm 内置的 `node-gyp` configure 命令，让 Makefile 与所有外部目标片段一起重新生成，然后在 manylinux 容器内编译这些文件。Windows 打包冒烟测试使用有界重试删除 fixture，以处理短暂的 `EBUSY` 及相关递归删除错误。
 
 ## Alternatives considered
 
