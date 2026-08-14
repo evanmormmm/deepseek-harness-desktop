@@ -195,33 +195,31 @@ jobs:
           esac
           addon_dir="$(realpath packages/subprocess/subprocess-local/node_modules/node-pty)"
           addon="$addon_dir/build/Release/pty.node"
-          [ -f "$addon_dir/build/Makefile" ] || {
-            echo "::error::node-pty install did not generate $addon_dir/build/Makefile"
+          [ -f "$addon_dir/binding.gyp" ] || {
+            echo "::error::node-pty install did not provide $addon_dir/binding.gyp"
             exit 1
           }
-          addon_api="$(realpath "$addon_dir/../node-addon-api")"
-          addon_api_store="$(dirname "$(dirname "$addon_api")")"
-          compatibility_link="$addon_dir/../../$(basename "$addon_api_store")"
-          compatibility_link_created=false
-          if [ ! -e "$compatibility_link" ]; then
-            ln -s "$addon_api_store" "$compatibility_link"
-            compatibility_link_created=true
-          fi
-          cleanup_compatibility_link() {
-            if [ "$compatibility_link_created" = true ]; then rm -f "$compatibility_link"; fi
+          npm_package="$(dirname "$(dirname "$(realpath "$(command -v npm)")")")"
+          node_gyp="$npm_package/node_modules/node-gyp/bin/node-gyp.js"
+          [ -f "$node_gyp" ] || {
+            echo "::error::npm-bundled node-gyp is missing: $node_gyp"
+            exit 1
           }
-          trap cleanup_compatibility_link EXIT
+          node "$node_gyp" configure --directory="$addon_dir"
+          [ -f "$addon_dir/build/Makefile" ] || {
+            echo "::error::node-gyp did not generate $addon_dir/build/Makefile"
+            exit 1
+          }
           docker run --rm \
             --user "$(id -u):$(id -g)" \
             -v "$PWD:$PWD" \
             -v "$HOME/.cache/node-gyp:$HOME/.cache/node-gyp:ro" \
             -v "$HOME/setup-pnpm:$HOME/setup-pnpm:ro" \
+            -v "$npm_package:$npm_package:ro" \
             -w "$addon_dir" \
             "$image" \
             bash -euxo pipefail -c \
               'rm -rf build/Release && make -C build -j2 BUILDTYPE=Release'
-          cleanup_compatibility_link
-          trap - EXIT
           [ -f "$addon" ] || { echo "::error::$addon missing after manylinux rebuild"; exit 1; }
           readelf --version-info "$addon" | tee node-pty-glibc-versions.txt
           maximum="$(sed -n 's/.*Name: GLIBC_\([0-9.]*\).*/\1/p' node-pty-glibc-versions.txt | sort -V | tail -1)"

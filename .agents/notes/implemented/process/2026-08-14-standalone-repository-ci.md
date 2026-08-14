@@ -6,7 +6,7 @@ English | [中文](2026-08-14-standalone-repository-ci.zh.md)
 
 ## Problem
 
-The upstream workflows assume organization-scoped GitHub App credentials, Project configuration, named enterprise runners, and self-hosted standby pools. A standalone public repository has none of those resources, so issue automation fails immediately and required pull-request jobs remain queued indefinitely. The portable Python runtime also rebuilds a host-generated `node-pty` Makefile inside a manylinux container; pnpm's resolved virtual-store path leaves that Makefile one directory short of `node-addon-api`. The Windows installer smoke can observe the uninstaller process exiting before Windows releases its log file handle.
+The upstream workflows assume organization-scoped GitHub App credentials, Project configuration, named enterprise runners, and self-hosted standby pools. A standalone public repository has none of those resources, so issue automation fails immediately and required pull-request jobs remain queued indefinitely. The portable Python runtime also rebuilds a host-generated `node-pty` Makefile inside a manylinux container; after pnpm finishes installing, that Makefile can reference a generated `node-addon-api` target fragment that is no longer present. The Windows installer smoke can observe the uninstaller process exiting before Windows releases its log file handle.
 
 ## Decision
 
@@ -14,7 +14,7 @@ Blocking pull-request jobs run on standard GitHub-hosted Linux and Windows runne
 
 Real-API E2E keeps its hard preflight and reads the repository secret `DEEPSEEK_API_KEY_EXTERNAL`; a missing secret remains a failure rather than an all-skipped false green. Dependabot and fork pull requests remain keyless and skip the job before secret access.
 
-The manylinux rebuild creates a temporary compatibility symlink from the resolved `node-pty` virtual-store directory to the actual `node-addon-api` store entry. An exit trap removes the link on success or failure before packaging continues. The Windows packaging smoke removes its fixture with bounded retries for transient `EBUSY` and related recursive-removal errors.
+The manylinux rebuild reruns the npm-bundled `node-gyp` configure command after installation completes so the Makefile and every external target fragment are regenerated together, mounts the npm package read-only, then compiles those files inside the manylinux container. The Windows packaging smoke removes its fixture with bounded retries for transient `EBUSY` and related recursive-removal errors.
 
 ## Alternatives considered
 
