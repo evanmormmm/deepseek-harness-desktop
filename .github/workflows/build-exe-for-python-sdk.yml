@@ -195,8 +195,19 @@ jobs:
           esac
           addon_dir="$(realpath packages/subprocess/subprocess-local/node_modules/node-pty)"
           addon="$addon_dir/build/Release/pty.node"
+          [ -f "$addon_dir/binding.gyp" ] || {
+            echo "::error::node-pty install did not provide $addon_dir/binding.gyp"
+            exit 1
+          }
+          npm_package="$(dirname "$(dirname "$(realpath "$(command -v npm)")")")"
+          node_gyp="$npm_package/node_modules/node-gyp/bin/node-gyp.js"
+          [ -f "$node_gyp" ] || {
+            echo "::error::npm-bundled node-gyp is missing: $node_gyp"
+            exit 1
+          }
+          node "$node_gyp" configure --directory="$addon_dir"
           [ -f "$addon_dir/build/Makefile" ] || {
-            echo "::error::node-pty install did not generate $addon_dir/build/Makefile"
+            echo "::error::node-gyp did not generate $addon_dir/build/Makefile"
             exit 1
           }
           docker run --rm \
@@ -204,6 +215,7 @@ jobs:
             -v "$PWD:$PWD" \
             -v "$HOME/.cache/node-gyp:$HOME/.cache/node-gyp:ro" \
             -v "$HOME/setup-pnpm:$HOME/setup-pnpm:ro" \
+            -v "$npm_package:$npm_package:ro" \
             -w "$addon_dir" \
             "$image" \
             bash -euxo pipefail -c \

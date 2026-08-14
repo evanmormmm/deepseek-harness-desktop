@@ -253,7 +253,7 @@ async function main(): Promise<void> {
     if (!existsSync(join(installed, 'user-note.txt'))) {
       throw new Error('desktop-package: uninstall removed the foreign fixture file')
     }
-    await rm(fixture, { recursive: true, force: true })
+    await rm(fixture, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 })
     console.log('desktop-package: silent install, WebView lifecycle, second launch, active uninstall, packaged cleanup, and foreign-file preservation smoke passed')
   }
 
