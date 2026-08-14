@@ -14,7 +14,7 @@ Blocking pull-request jobs run on standard GitHub-hosted Linux and Windows runne
 
 Real-API E2E keeps its hard preflight and reads the repository secret `DEEPSEEK_API_KEY_EXTERNAL`; a missing secret remains a failure rather than an all-skipped false green. Dependabot and fork pull requests remain keyless and skip the job before secret access.
 
-The manylinux rebuild reruns the npm-bundled `node-gyp` configure command after installation completes so the Makefile and every external target fragment are regenerated together, then compiles those files inside the manylinux container. The Windows packaging smoke removes its fixture with bounded retries for transient `EBUSY` and related recursive-removal errors.
+The manylinux rebuild reruns the npm-bundled `node-gyp` configure command after installation completes so the Makefile and every external target fragment are regenerated together, mounts the npm package read-only, then compiles those files inside the manylinux container. The Windows packaging smoke removes its fixture with bounded retries for transient `EBUSY` and related recursive-removal errors.
 
 ## Alternatives considered
 

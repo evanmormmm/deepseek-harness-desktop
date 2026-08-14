@@ -215,6 +215,7 @@ jobs:
             -v "$PWD:$PWD" \
             -v "$HOME/.cache/node-gyp:$HOME/.cache/node-gyp:ro" \
             -v "$HOME/setup-pnpm:$HOME/setup-pnpm:ro" \
+            -v "$npm_package:$npm_package:ro" \
             -w "$addon_dir" \
             "$image" \
             bash -euxo pipefail -c \

@@ -14,7 +14,7 @@ Status: implemented
 
 真实 API E2E 保留强制 preflight，并读取仓库 secret `DEEPSEEK_API_KEY_EXTERNAL`；secret 缺失仍然失败，不会把全部跳过误报为绿色。Dependabot 和分叉拉取请求继续不接触 secret，并在访问 secret 前跳过任务。
 
-manylinux 重建会在安装完成后重新运行 npm 内置的 `node-gyp` configure 命令，让 Makefile 与所有外部目标片段一起重新生成，然后在 manylinux 容器内编译这些文件。Windows 打包冒烟测试使用有界重试删除 fixture，以处理短暂的 `EBUSY` 及相关递归删除错误。
+manylinux 重建会在安装完成后重新运行 npm 内置的 `node-gyp` configure 命令，让 Makefile 与所有外部目标片段一起重新生成，再以只读方式挂载 npm 包并在 manylinux 容器内编译这些文件。Windows 打包冒烟测试使用有界重试删除 fixture，以处理短暂的 `EBUSY` 及相关递归删除错误。
 
 ## Alternatives considered
 
