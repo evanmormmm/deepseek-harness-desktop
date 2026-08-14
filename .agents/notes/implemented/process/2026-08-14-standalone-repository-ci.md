@@ -14,7 +14,7 @@ Blocking pull-request jobs run on standard GitHub-hosted Linux and Windows runne
 
 Real-API E2E keeps its hard preflight and reads the repository secret `DEEPSEEK_API_KEY_EXTERNAL`; a missing secret remains a failure rather than an all-skipped false green. Dependabot and fork pull requests remain keyless and skip the job before secret access.
 
-The manylinux rebuild creates a temporary compatibility symlink from the resolved `node-pty` virtual-store directory to the actual `node-addon-api` store entry. An exit trap removes the link on success or failure before packaging continues. The Windows packaging smoke removes its fixture with bounded retries for transient `EBUSY` and related recursive-removal errors.
+The manylinux rebuild creates the relative virtual-store directory expected by the host-generated Makefile and copies the resolved `node-addon-api` package into it. An exit trap removes that temporary directory on success or failure before packaging continues. The Windows packaging smoke removes its fixture with bounded retries for transient `EBUSY` and related recursive-removal errors.
 
 ## Alternatives considered
 

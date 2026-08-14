@@ -201,16 +201,21 @@ jobs:
           }
           addon_api="$(realpath "$addon_dir/../node-addon-api")"
           addon_api_store="$(dirname "$(dirname "$addon_api")")"
-          compatibility_link="$addon_dir/../../$(basename "$addon_api_store")"
-          compatibility_link_created=false
-          if [ ! -e "$compatibility_link" ]; then
-            ln -s "$addon_api_store" "$compatibility_link"
-            compatibility_link_created=true
+          compatibility_root="$addon_dir/../../$(basename "$addon_api_store")"
+          compatibility_root_created=false
+          if [ ! -e "$compatibility_root" ]; then
+            mkdir -p "$compatibility_root/node_modules"
+            cp -a "$addon_api" "$compatibility_root/node_modules/node-addon-api"
+            compatibility_root_created=true
           fi
-          cleanup_compatibility_link() {
-            if [ "$compatibility_link_created" = true ]; then rm -f "$compatibility_link"; fi
+          [ -f "$compatibility_root/node_modules/node-addon-api/node_addon_api_maybe.target.mk" ] || {
+            echo "::error::node-addon-api compatibility directory is incomplete: $compatibility_root"
+            exit 1
           }
-          trap cleanup_compatibility_link EXIT
+          cleanup_compatibility_root() {
+            if [ "$compatibility_root_created" = true ]; then rm -rf "$compatibility_root"; fi
+          }
+          trap cleanup_compatibility_root EXIT
           docker run --rm \
             --user "$(id -u):$(id -g)" \
             -v "$PWD:$PWD" \
@@ -220,7 +225,7 @@ jobs:
             "$image" \
             bash -euxo pipefail -c \
               'rm -rf build/Release && make -C build -j2 BUILDTYPE=Release'
-          cleanup_compatibility_link
+          cleanup_compatibility_root
           trap - EXIT
           [ -f "$addon" ] || { echo "::error::$addon missing after manylinux rebuild"; exit 1; }
           readelf --version-info "$addon" | tee node-pty-glibc-versions.txt

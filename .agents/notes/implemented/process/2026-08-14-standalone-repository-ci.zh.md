@@ -14,7 +14,7 @@ Status: implemented
 
 真实 API E2E 保留强制 preflight，并读取仓库 secret `DEEPSEEK_API_KEY_EXTERNAL`；secret 缺失仍然失败，不会把全部跳过误报为绿色。Dependabot 和分叉拉取请求继续不接触 secret，并在访问 secret 前跳过任务。
 
-manylinux 重建会从解析后的 `node-pty` 虚拟存储目录创建一个临时兼容符号链接，指向实际的 `node-addon-api` 存储项。退出 trap 会在成功或失败时删除该链接，然后打包流程才会继续。Windows 打包冒烟测试使用有界重试删除 fixture，以处理短暂的 `EBUSY` 及相关递归删除错误。
+manylinux 重建会创建宿主机生成的 Makefile 所需的相对虚拟存储目录，并把解析后的 `node-addon-api` 包复制到其中。退出 trap 会在成功或失败时删除该临时目录，然后打包流程才会继续。Windows 打包冒烟测试使用有界重试删除 fixture，以处理短暂的 `EBUSY` 及相关递归删除错误。
 
 ## Alternatives considered
 
